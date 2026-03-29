@@ -1,83 +1,65 @@
 "use client";
 
-import { useState, Component, type ErrorInfo, type ReactNode } from "react";
+import { Component, type ErrorInfo, type ReactNode } from "react";
+import { useAccount, useChainId } from "wagmi";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { PositionCard, type PositionData } from "@/components/dashboard/PositionCard";
+import { LivePositionCard } from "@/components/dashboard/LivePositionCard";
+import { PositionCardSkeleton } from "@/components/dashboard/PositionCard";
+import { usePositions } from "@/hooks/usePositions";
+import { SUPPORTED_CHAIN_IDS } from "@/config/contracts";
 
-const MOCK_POSITIONS: PositionData[] = [
-  {
-    id: "pos-1",
-    poolPair: "ETH / USDC",
-    tickLower: -887_272,
-    tickUpper: 887_272,
-    liquidity: "$12,450.00",
-    feesEarned: "$84.32",
-    pnlPercent: 6.7,
-    network: "mainnet",
-  },
-  {
-    id: "pos-2",
-    poolPair: "WBTC / ETH",
-    tickLower: -60_000,
-    tickUpper: -40_000,
-    liquidity: "$8,900.00",
-    feesEarned: "$21.15",
-    pnlPercent: -2.34,
-    network: "mainnet",
-  },
-  {
-    id: "pos-3",
-    poolPair: "ETH / USDC",
-    tickLower: -10_000,
-    tickUpper: 10_000,
-    liquidity: "$5,200.00",
-    feesEarned: "$47.80",
-    pnlPercent: 14.12,
-    network: "base",
-  },
-];
+// ---------------------------------------------------------------------------
+// Network indicator
+// ---------------------------------------------------------------------------
 
-type Network = "mainnet" | "base";
+const CHAIN_LABELS: Record<number, string> = {
+  1: "Ethereum",
+  8453: "Base",
+  11155111: "Sepolia",
+  84532: "Base Sepolia",
+};
 
-interface NetworkToggleProps {
-  selected: Network;
-  onChange: (network: Network) => void;
-}
+function NetworkIndicator({ chainId }: { chainId: number }) {
+  const label = CHAIN_LABELS[chainId] ?? `Chain ${chainId}`;
+  const isSupported = (SUPPORTED_CHAIN_IDS as readonly number[]).includes(chainId);
 
-function NetworkToggle({ selected, onChange }: NetworkToggleProps) {
+  if (!isSupported) {
+    return (
+      <div className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5">
+        <span className="h-2 w-2 rounded-full bg-red-400" />
+        <span className="text-xs font-medium text-red-400">
+          Unsupported network: {label} — switch to Mainnet or Base
+        </span>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex rounded-lg border border-white/10 bg-white/4 p-0.5">
-      {(["mainnet", "base"] as Network[]).map((network) => (
-        <button
-          key={network}
-          onClick={() => onChange(network)}
-          className={
-            selected === network
-              ? "rounded-md bg-violet-600 px-4 py-1.5 text-xs font-semibold text-white transition-colors"
-              : "rounded-md px-4 py-1.5 text-xs font-medium text-white/50 transition-colors hover:text-white/80"
-          }
-        >
-          {network === "mainnet" ? "Mainnet" : "Base"}
-        </button>
-      ))}
+    <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/4 px-3 py-1.5">
+      <span className="h-2 w-2 rounded-full bg-emerald-400" />
+      <span className="text-xs font-medium text-white/60">{label}</span>
     </div>
   );
 }
 
-interface PositionListErrorBoundaryState {
+// ---------------------------------------------------------------------------
+// Error boundary
+// ---------------------------------------------------------------------------
+
+interface ErrorBoundaryState {
   hasError: boolean;
 }
 
 class PositionListErrorBoundary extends Component<
   { children: ReactNode },
-  PositionListErrorBoundaryState
+  ErrorBoundaryState
 > {
   constructor(props: { children: ReactNode }) {
     super(props);
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(): PositionListErrorBoundaryState {
+  static getDerivedStateFromError(): ErrorBoundaryState {
     return { hasError: true };
   }
 
@@ -97,15 +79,46 @@ class PositionListErrorBoundary extends Component<
   }
 }
 
-interface PositionListProps {
-  positions: PositionData[];
-}
+// ---------------------------------------------------------------------------
+// Position list (live data)
+// ---------------------------------------------------------------------------
 
-function PositionList({ positions }: PositionListProps) {
+function PositionListContent() {
+  const { address } = useAccount();
+  const { positions, isLoading, error } = usePositions(address);
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+        {[1, 2, 3].map((i) => (
+          <PositionCardSkeleton key={i} />
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-6 text-center">
+        <p className="mb-1 text-sm font-medium text-red-400">Error loading positions</p>
+        <p className="text-xs text-red-400/60">{error.message}</p>
+      </div>
+    );
+  }
+
   if (positions.length === 0) {
     return (
       <div className="rounded-xl border border-white/8 bg-white/4 p-10 text-center">
-        <p className="text-sm text-white/40">No positions on this network.</p>
+        <p className="mb-2 text-sm font-medium text-white/60">No positions found</p>
+        <p className="mb-5 text-xs text-white/30">
+          You have no Uniswap V4 positions on this network.
+        </p>
+        <a
+          href="/actions"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-violet-500"
+        >
+          Open a position
+        </a>
       </div>
     );
   }
@@ -113,16 +126,34 @@ function PositionList({ positions }: PositionListProps) {
   return (
     <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
       {positions.map((position) => (
-        <PositionCard key={position.id} position={position} />
+        <LivePositionCard key={position.tokenId.toString()} position={position} />
       ))}
     </div>
   );
 }
 
-export default function DashboardPage() {
-  const [selectedNetwork, setSelectedNetwork] = useState<Network>("mainnet");
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
 
-  const filtered = MOCK_POSITIONS.filter((p) => p.network === selectedNetwork);
+export default function DashboardPage() {
+  const { isConnected } = useAccount();
+  const chainId = useChainId();
+
+  if (!isConnected) {
+    return (
+      <AppLayout>
+        <div className="flex h-full items-center justify-center px-8 py-8">
+          <div className="text-center">
+            <p className="mb-2 text-base font-semibold text-white">Connect your wallet</p>
+            <p className="text-sm text-white/40">
+              Connect a wallet to view your Uniswap V4 positions.
+            </p>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>
@@ -134,11 +165,11 @@ export default function DashboardPage() {
               Your Uniswap V4 concentrated liquidity positions
             </p>
           </div>
-          <NetworkToggle selected={selectedNetwork} onChange={setSelectedNetwork} />
+          <NetworkIndicator chainId={chainId} />
         </div>
 
         <PositionListErrorBoundary>
-          <PositionList positions={filtered} />
+          <PositionListContent />
         </PositionListErrorBoundary>
       </div>
     </AppLayout>
