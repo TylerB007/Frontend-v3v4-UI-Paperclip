@@ -4,6 +4,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useCollectFees } from "@/hooks/useCollectFees";
 import { TransactionToast } from "./TransactionToast";
+import type { Position } from "@/hooks/usePositions";
 
 /** Format a raw bigint token amount for display (respects decimals). */
 function formatTokenAmount(amount: bigint | undefined, decimals: number): string {
@@ -21,8 +22,7 @@ function formatTokenAmount(amount: bigint | undefined, decimals: number): string
 }
 
 interface CollectFeesButtonProps {
-  tokenId: bigint;
-  chainId: number;
+  position: Position;
   token0Symbol: string;
   token1Symbol: string;
   /** Decimals for token0 display (defaults to 18). */
@@ -37,13 +37,13 @@ interface CollectFeesButtonProps {
  * Disabled when no fees are owed or the position is loading.
  */
 export function CollectFeesButton({
-  tokenId,
-  chainId,
+  position,
   token0Symbol,
   token1Symbol,
   token0Decimals = 18,
   token1Decimals = 18,
 }: CollectFeesButtonProps) {
+  const { tokenId, chainId } = position;
   const [showModal, setShowModal] = useState(false);
   const [showToast, setShowToast] = useState(false);
 
@@ -57,7 +57,7 @@ export function CollectFeesButton({
     isError,
     error,
     txHash,
-  } = useCollectFees(tokenId, chainId);
+  } = useCollectFees(position);
 
   const hasOwed =
     (tokensOwed0 !== undefined && tokensOwed0 > 0n) ||

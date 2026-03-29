@@ -111,7 +111,9 @@ export function LiquidityActions({
       ? addLiquidityDelta > 0n
         ? {
             tokenId: position.tokenId,
-            chainId: position.chainId,
+            poolKey: position.poolKey,
+            tickLower: position.tickLower,
+            tickUpper: position.tickUpper,
             liquidityDelta: addLiquidityDelta,
             amount0Desired,
             amount1Desired,
@@ -121,7 +123,9 @@ export function LiquidityActions({
       : removeLiquidityDelta < 0n
         ? {
             tokenId: position.tokenId,
-            chainId: position.chainId,
+            poolKey: position.poolKey,
+            tickLower: position.tickLower,
+            tickUpper: position.tickUpper,
             liquidityDelta: removeLiquidityDelta,
             slippageBps,
           }

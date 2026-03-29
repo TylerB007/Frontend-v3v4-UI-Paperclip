@@ -66,8 +66,7 @@ export function LivePositionCard({ position, className }: LivePositionCardProps)
         {/* Action row */}
         <div className="mt-2 grid grid-cols-3 gap-2">
           <CollectFeesButton
-            tokenId={position.tokenId}
-            chainId={position.chainId}
+            position={position}
             token0Symbol={meta.token0.symbol}
             token1Symbol={meta.token1.symbol}
             token0Decimals={meta.token0.decimals}
@@ -125,6 +124,7 @@ export function LivePositionCard({ position, className }: LivePositionCardProps)
         isOpen={swapOpen}
         onClose={() => setSwapOpen(false)}
         chainId={position.chainId}
+        poolKey={position.poolKey}
         token0={token0}
         token1={token1}
       />

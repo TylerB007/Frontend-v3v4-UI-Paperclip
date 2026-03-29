@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { useSwap, type UseSwapParams } from "@/hooks/useSwap";
 import { TransactionToast } from "./TransactionToast";
+import type { PoolKey } from "@/hooks/usePositions";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -55,6 +56,8 @@ interface SwapPanelProps {
   isOpen: boolean;
   onClose: () => void;
   chainId: number;
+  /** The pool key for this swap pair. */
+  poolKey: PoolKey;
   /** The pool's token0. Pre-populated as the default "you pay" token. */
   token0: TokenInfo;
   /** The pool's token1. Pre-populated as the default "you receive" token. */
@@ -73,7 +76,7 @@ interface SwapPanelProps {
  *   - Permit2 approval step when required
  *   - Transaction status toast
  */
-export function SwapPanel({ isOpen, onClose, chainId, token0, token1 }: SwapPanelProps) {
+export function SwapPanel({ isOpen, onClose, chainId, poolKey, token0, token1 }: SwapPanelProps) {
   const [tokenIn, setTokenIn] = useState<TokenInfo>(token0);
   const [tokenOut, setTokenOut] = useState<TokenInfo>(token1);
   const [amountInRaw, setAmountInRaw] = useState("");
@@ -92,7 +95,13 @@ export function SwapPanel({ isOpen, onClose, chainId, token0, token1 }: SwapPane
 
   const swapParams: UseSwapParams | null =
     amountIn > 0n
-      ? { tokenIn: tokenIn.address, tokenOut: tokenOut.address, amountIn, slippageBps, chainId }
+      ? {
+          poolKey,
+          zeroForOne: tokenIn === token0,
+          tradeType: "exactIn",
+          amount: amountIn,
+          slippageBps,
+        }
       : null;
 
   const {

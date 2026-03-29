@@ -14,6 +14,8 @@ export const CONTRACT_ADDRESSES = {
     stateView: "0x7fFE42C4a5DEeA5b0feC41C94C136Cf115597227" as const,
     universalRouter: "0x66a9893cC07D91D95644AEDD05D03f95e1dBA8Af" as const,
     permit2: "0x000000000022D473030F116dDEE9F6B43aC78BA3" as const,
+    // TODO: confirm from https://docs.uniswap.org/contracts/v4/deployments
+    quoter: "0x52f0E24D8F95B35d9d1b28bA4a10E62e5cBF6B07" as const,
   },
   // Base
   8453: {
@@ -22,6 +24,8 @@ export const CONTRACT_ADDRESSES = {
     stateView: "0xA3c0c9b65baD0b08107Aa264b0f3dB444b867A71" as const,
     universalRouter: "0x6fF5693b99212Da76ad316178A184AB56D7b1b74" as const,
     permit2: "0x000000000022D473030F116dDEE9F6B43aC78BA3" as const,
+    // TODO: confirm from https://docs.uniswap.org/contracts/v4/deployments
+    quoter: "0x4b64CC95fA8F0a44B3A51571a7c7bCE0deBe5Fd6" as const,
   },
   // Sepolia (dev/testing)
   11155111: {
@@ -30,6 +34,8 @@ export const CONTRACT_ADDRESSES = {
     stateView: "0xe7b96C2f7E6bEFb4B430F35E1e7E95e0dd0B8c8c" as const,
     universalRouter: "0x3A0D848D3EF86b8AC4193B5E7e4792e88B3aA700" as const,
     permit2: "0x000000000022D473030F116dDEE9F6B43aC78BA3" as const,
+    // TODO: confirm from https://docs.uniswap.org/contracts/v4/deployments
+    quoter: "0x0000000000000000000000000000000000000000" as const,
   },
   // Base Sepolia (dev/testing)
   84532: {
@@ -38,6 +44,8 @@ export const CONTRACT_ADDRESSES = {
     stateView: "0x571291b572ed32ce6751a2Cb5486cD408d0A64e6" as const,
     universalRouter: "0x492E6456D9528a2a085571b3dF38Ea7F05081bAF" as const,
     permit2: "0x000000000022D473030F116dDEE9F6B43aC78BA3" as const,
+    // TODO: confirm from https://docs.uniswap.org/contracts/v4/deployments
+    quoter: "0x0000000000000000000000000000000000000000" as const,
   },
 } as const;
 
