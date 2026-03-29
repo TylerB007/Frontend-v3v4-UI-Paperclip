@@ -5,6 +5,7 @@ import { useAccount, useChainId } from "wagmi";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { LivePositionCard } from "@/components/dashboard/LivePositionCard";
 import { PositionCardSkeleton } from "@/components/dashboard/PositionCard";
+import { MetricsSummary } from "@/components/analytics/MetricsSummary";
 import { usePositions } from "@/hooks/usePositions";
 import { SUPPORTED_CHAIN_IDS } from "@/config/contracts";
 
@@ -80,54 +81,54 @@ class PositionListErrorBoundary extends Component<
 }
 
 // ---------------------------------------------------------------------------
-// Position list (live data)
+// Dashboard content — fetches positions, renders MetricsSummary + position grid
 // ---------------------------------------------------------------------------
 
-function PositionListContent() {
+function DashboardContent() {
   const { address } = useAccount();
   const { positions, isLoading, error } = usePositions(address);
 
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        {[1, 2, 3].map((i) => (
-          <PositionCardSkeleton key={i} />
-        ))}
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-6 text-center">
-        <p className="mb-1 text-sm font-medium text-red-400">Error loading positions</p>
-        <p className="text-xs text-red-400/60">{error.message}</p>
-      </div>
-    );
-  }
-
-  if (positions.length === 0) {
-    return (
-      <div className="rounded-xl border border-white/8 bg-white/4 p-10 text-center">
-        <p className="mb-2 text-sm font-medium text-white/60">No positions found</p>
-        <p className="mb-5 text-xs text-white/30">
-          You have no Uniswap V4 positions on this network.
-        </p>
-        <a
-          href="/actions"
-          className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-violet-500"
-        >
-          Open a position
-        </a>
-      </div>
-    );
-  }
-
   return (
-    <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-      {positions.map((position) => (
-        <LivePositionCard key={position.tokenId.toString()} position={position} />
-      ))}
+    <div className="space-y-6">
+      {/* Metrics band — only shown once positions are known */}
+      {!isLoading && !error && (
+        <PositionListErrorBoundary>
+          <MetricsSummary positions={positions} />
+        </PositionListErrorBoundary>
+      )}
+
+      {/* Position grid */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <PositionCardSkeleton key={i} />
+          ))}
+        </div>
+      ) : error ? (
+        <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-6 text-center">
+          <p className="mb-1 text-sm font-medium text-red-400">Error loading positions</p>
+          <p className="text-xs text-red-400/60">{error.message}</p>
+        </div>
+      ) : positions.length === 0 ? (
+        <div className="rounded-xl border border-white/8 bg-white/4 p-10 text-center">
+          <p className="mb-2 text-sm font-medium text-white/60">No positions found</p>
+          <p className="mb-5 text-xs text-white/30">
+            You have no Uniswap V4 positions on this network.
+          </p>
+          <a
+            href="/actions"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-violet-500"
+          >
+            Open a position
+          </a>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+          {positions.map((position) => (
+            <LivePositionCard key={position.tokenId.toString()} position={position} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -169,7 +170,7 @@ export default function DashboardPage() {
         </div>
 
         <PositionListErrorBoundary>
-          <PositionListContent />
+          <DashboardContent />
         </PositionListErrorBoundary>
       </div>
     </AppLayout>

@@ -7,6 +7,7 @@ import { PositionCard, PositionCardSkeleton } from "./PositionCard";
 import { CollectFeesButton } from "@/components/actions/CollectFeesButton";
 import { SwapPanel } from "@/components/actions/SwapPanel";
 import { LiquidityActions } from "@/components/actions/LiquidityActions";
+import { PositionLogTable } from "@/components/analytics/PositionLogTable";
 
 /** Format a raw V4 liquidity uint128 into a compact human-readable string. */
 function formatLiquidity(liquidity: bigint): string {
@@ -31,6 +32,7 @@ export function LivePositionCard({ position, className }: LivePositionCardProps)
   const { data: meta, isLoading } = usePoolMetadata(position.poolKey, position.chainId);
   const [swapOpen, setSwapOpen] = useState(false);
   const [liquidityOpen, setLiquidityOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   if (isLoading || !meta) {
     return <PositionCardSkeleton className={className} />;
@@ -117,6 +119,38 @@ export function LivePositionCard({ position, className }: LivePositionCardProps)
             Liquidity
           </button>
         </div>
+
+        {/* View History toggle */}
+        <button
+          onClick={() => setHistoryOpen((o) => !o)}
+          aria-expanded={historyOpen}
+          className="mt-2 flex w-full items-center justify-between rounded-lg border border-white/8 bg-white/3 px-3 py-2 text-xs font-medium text-white/50 transition-colors hover:border-white/12 hover:bg-white/5 hover:text-white/70"
+        >
+          <span>View History</span>
+          <svg
+            className={`h-3.5 w-3.5 shrink-0 transition-transform ${historyOpen ? "rotate-180" : ""}`}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            aria-hidden
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        {/* Expandable position history */}
+        {historyOpen && (
+          <div className="mt-2 border-t border-white/8 pt-3">
+            <PositionLogTable
+              tokenId={position.tokenId}
+              chainId={position.chainId}
+              token0Symbol={meta.token0.symbol}
+              token1Symbol={meta.token1.symbol}
+              token0Decimals={meta.token0.decimals}
+              token1Decimals={meta.token1.decimals}
+            />
+          </div>
+        )}
       </div>
 
       {/* Panels rendered outside the card to avoid z-index / overflow issues */}
