@@ -27,7 +27,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useChainId, usePublicClient, useAccount, useWriteContract } from "wagmi";
 import { type Address } from "viem";
 import { TickMath } from "@uniswap/v3-sdk";
-import JSBI from "jsbi";
+
 import { V4PositionPlanner, Actions } from "@uniswap/v4-sdk";
 import { RoutePlanner, CommandType } from "@uniswap/universal-router-sdk";
 import { getContracts, type SupportedChainId, SUPPORTED_CHAIN_IDS } from "@/config/contracts";

@@ -1,11 +1,12 @@
 "use client";
 
-import { Component, type ErrorInfo, type ReactNode } from "react";
+import { Component, type ErrorInfo, type ReactNode, useState } from "react";
 import { useAccount, useChainId } from "wagmi";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { LivePositionCard } from "@/components/dashboard/LivePositionCard";
 import { PositionCardSkeleton } from "@/components/dashboard/PositionCard";
 import { MetricsSummary } from "@/components/analytics/MetricsSummary";
+import { PositionLogTable } from "@/components/analytics/PositionLogTable";
 import { usePositions } from "@/hooks/usePositions";
 import { SUPPORTED_CHAIN_IDS } from "@/config/contracts";
 
@@ -86,7 +87,13 @@ class PositionListErrorBoundary extends Component<
 
 function DashboardContent() {
   const { address } = useAccount();
+  const chainId = useChainId();
   const { positions, isLoading, error } = usePositions(address);
+  const [selectedTokenId, setSelectedTokenId] = useState<bigint | null>(null);
+
+  // Default to first position once loaded
+  const activeTokenId =
+    selectedTokenId ?? (positions.length > 0 ? positions[0].tokenId : null);
 
   return (
     <div className="space-y-6">
@@ -128,6 +135,35 @@ function DashboardContent() {
             <LivePositionCard key={position.tokenId.toString()} position={position} />
           ))}
         </div>
+      )}
+
+      {/* Position log section */}
+      {!isLoading && !error && positions.length > 0 && (
+        <PositionListErrorBoundary>
+          <div className="rounded-xl border border-white/8 bg-white/4 p-5">
+            <div className="mb-4 flex items-center justify-between gap-4">
+              <h2 className="text-sm font-semibold text-white">Position Log</h2>
+              <select
+                value={activeTokenId?.toString() ?? ""}
+                onChange={(e) => setSelectedTokenId(BigInt(e.target.value))}
+                className="rounded-lg border border-white/10 bg-white/6 px-3 py-1.5 text-xs font-medium text-white/70 focus:outline-none focus:ring-1 focus:ring-violet-500"
+              >
+                {positions.map((p) => (
+                  <option
+                    key={p.tokenId.toString()}
+                    value={p.tokenId.toString()}
+                    className="bg-neutral-900"
+                  >
+                    #{p.tokenId.toString()}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {activeTokenId !== null && (
+              <PositionLogTable tokenId={activeTokenId} chainId={chainId} />
+            )}
+          </div>
+        </PositionListErrorBoundary>
       )}
     </div>
   );

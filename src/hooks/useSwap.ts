@@ -259,7 +259,7 @@ export function useSwap(swapParams: UseSwapParams | null): UseSwapResult {
   const publicClient = usePublicClient({ chainId });
   const { address: userAddress } = useAccount();
   const { signTypedDataAsync } = useSignTypedData();
-  const { writeContractAsync, isPending, error: writeError, data: txHash, reset } = useWriteContract();
+  const { writeContractAsync, isPending, error: writeError, data: txHash } = useWriteContract();
   const [isConfirmed, setIsConfirmed] = useState(false);
   const queryClient = useQueryClient();
 
